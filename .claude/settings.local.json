@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Read(//c/Users/Artem/Documents/GitHub/**)",
+      "Bash(python -m pytest --version)",
+      "Bash(uv add:*)",
+      "Bash(../.venv/Scripts/python -m pip install:*)",
+      "Bash(../.venv/Scripts/python:*)",
+      "Bash(python test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
