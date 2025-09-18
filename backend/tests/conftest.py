@@ -1,8 +1,9 @@
 import pytest
 import sys
 import os
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, patch
 from typing import List, Dict, Any
+from fastapi.testclient import TestClient
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -164,3 +165,141 @@ TEST_COURSE_NAMES = [
     "AI Fundamentals",
     "NonexistentCourse"
 ]
+
+# API Testing Fixtures
+
+@pytest.fixture
+def mock_rag_system():
+    """Mock RAG system for API testing"""
+    mock = Mock()
+    mock.query = Mock()
+    mock.get_course_analytics = Mock()
+    mock.session_manager = Mock()
+    mock.session_manager.create_session = Mock(return_value="test-session-123")
+    mock.add_course_folder = Mock(return_value=(2, 10))
+    return mock
+
+@pytest.fixture
+def test_app(mock_rag_system):
+    """Create test FastAPI app with mocked dependencies"""
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.middleware.trustedhost import TrustedHostMiddleware
+    from pydantic import BaseModel
+    from typing import List, Optional, Dict, Any
+
+    # Create test app without static file mounting
+    app = FastAPI(title="Course Materials RAG System", root_path="")
+
+    # Add middleware
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*"]
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+
+    # Pydantic models
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[Dict[str, Any]]
+        session_id: str
+
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+
+    # API endpoints with mocked RAG system
+    @app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        try:
+            session_id = request.session_id
+            if not session_id:
+                session_id = mock_rag_system.session_manager.create_session()
+
+            answer, sources = mock_rag_system.query(request.query, session_id)
+
+            formatted_sources = []
+            for source in sources:
+                if isinstance(source, dict):
+                    formatted_sources.append(source)
+                else:
+                    formatted_sources.append({
+                        'text': str(source),
+                        'link': None
+                    })
+
+            return QueryResponse(
+                answer=answer,
+                sources=formatted_sources,
+                session_id=session_id
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        try:
+            analytics = mock_rag_system.get_course_analytics()
+            return CourseStats(
+                total_courses=analytics["total_courses"],
+                course_titles=analytics["course_titles"]
+            )
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/")
+    async def root():
+        return {"message": "RAG System API"}
+
+    return app
+
+@pytest.fixture
+def client(test_app):
+    """Test client for API testing"""
+    return TestClient(test_app)
+
+@pytest.fixture
+def sample_query_request():
+    """Sample query request data"""
+    return {
+        "query": "What is machine learning?",
+        "session_id": "test-session-123"
+    }
+
+@pytest.fixture
+def sample_query_response():
+    """Sample query response data"""
+    return {
+        "answer": "Machine learning is a subset of artificial intelligence.",
+        "sources": [
+            {
+                "text": "ML definition from course",
+                "link": "https://example.com/lesson1",
+                "course_title": "Test Course",
+                "lesson_number": 1
+            }
+        ],
+        "session_id": "test-session-123"
+    }
+
+@pytest.fixture
+def sample_course_analytics():
+    """Sample course analytics data"""
+    return {
+        "total_courses": 3,
+        "course_titles": ["Test Course", "Machine Learning", "AI Fundamentals"]
+    }
