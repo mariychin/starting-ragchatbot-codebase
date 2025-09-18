@@ -1,9 +1,10 @@
-# Development Changes - Code Quality Tools & Enhanced Testing Framework
+# Development Changes - Complete Enhancement Package
 
 ## Overview
-This document combines two major enhancements to the RAG chatbot development workflow:
+This document combines three major enhancements to the RAG chatbot development workflow:
 1. **Code Quality Tools Implementation** - Added essential tools for consistent, clean, and maintainable Python code
 2. **Enhanced Testing Framework** - Comprehensive API endpoint testing infrastructure with pytest configuration
+3. **Dark/Light Theme Toggle** - User-friendly theme switching with persistent preferences
 
 ## Part 1: Code Quality Tools Implementation
 
@@ -187,6 +188,137 @@ pytest backend/tests/test_api_endpoints.py::TestQueryEndpoint
 5. **Documentation**: Tests serve as living documentation of API behavior
 6. **Regression Prevention**: Catches API breaking changes early in development
 
+## Part 3: Dark/Light Theme Toggle
+
+### HTML Structure (`frontend/index.html`)
+
+**Added Theme Toggle Button:**
+- Added a new header layout with flex structure to position toggle in top-right
+- Implemented toggle button with sun/moon icons for intuitive theme switching
+- Made header visible (was previously hidden)
+- Added accessibility attributes (`aria-label`)
+
+**Key Changes:**
+```html
+<header>
+    <div class="header-content">
+        <div class="header-left">
+            <h1>Course Materials Assistant</h1>
+            <p class="subtitle">Ask questions about courses, instructors, and content</p>
+        </div>
+        <div class="header-right">
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <!-- Sun and Moon SVG icons -->
+            </button>
+        </div>
+    </div>
+</header>
+```
+
+### CSS Styling (`frontend/style.css`)
+
+**Light Theme Variables:**
+- Added comprehensive light theme color palette using CSS custom properties
+- Implemented `[data-theme="light"]` selector for theme switching
+- Maintained consistent design hierarchy and accessibility in both themes
+
+**Theme Toggle Button Styling:**
+- Circular button design with smooth hover effects
+- Icon rotation and opacity transitions for visual feedback
+- Proper focus states for accessibility
+
+**Smooth Transitions:**
+- Added `transition` properties to all themed elements
+- 0.3s ease transitions for background colors, borders, and text colors
+- Smooth icon animations with rotation and scaling effects
+
+**Key CSS Features:**
+```css
+/* Light theme variables */
+[data-theme="light"] {
+    --background: #ffffff;
+    --surface: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    /* ... more variables */
+}
+
+/* Smooth transitions */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme toggle animations */
+.theme-icon {
+    transition: all 0.3s ease;
+    position: absolute;
+}
+```
+
+### JavaScript Functionality (`frontend/script.js`)
+
+**Theme Management Functions:**
+- `initializeTheme()`: Loads saved theme preference from localStorage or defaults to dark
+- `toggleTheme()`: Switches between themes and saves preference
+- `applyTheme()`: Applies theme by setting/removing `data-theme` attribute
+
+**Event Handling:**
+- Added click event listener for theme toggle button
+- Integrated theme initialization into DOM ready event
+
+**Local Storage Integration:**
+- Persists user theme preference across sessions
+- Automatically applies saved theme on page load
+
+**Key JavaScript Features:**
+```javascript
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+```
+
+### Design Features
+
+#### Visual Design
+- **Icon-based toggle**: Sun icon for light theme, moon icon for dark theme
+- **Smooth animations**: Icons rotate and scale with opacity transitions
+- **Consistent positioning**: Button positioned in top-right corner of header
+- **Hover effects**: Button elevates and changes colors on hover
+
+#### Accessibility
+- **Keyboard navigation**: Button is focusable and keyboard accessible
+- **Screen reader support**: Proper `aria-label` for screen readers
+- **Focus indicators**: Clear focus ring when navigating with keyboard
+- **High contrast**: Both themes maintain good color contrast ratios
+
+#### User Experience
+- **Persistent preferences**: Theme choice saved and restored across sessions
+- **Instant feedback**: Immediate visual response to theme changes
+- **Smooth transitions**: No jarring color changes, everything animates smoothly
+- **Intuitive icons**: Universal sun/moon symbolism for light/dark themes
+
+### Technical Implementation
+
+#### CSS Architecture
+- Uses CSS custom properties (variables) for consistent theming
+- Minimal DOM manipulation - all styling handled through CSS
+- Transition properties ensure smooth visual changes
+- Scalable system that can easily accommodate additional themes
+
+#### JavaScript Architecture
+- Clean separation of concerns with dedicated theme functions
+- Event-driven architecture with proper event listeners
+- Browser storage integration for preference persistence
+- No external dependencies - vanilla JavaScript implementation
+
+#### Browser Compatibility
+- Works in all modern browsers that support CSS custom properties
+- Graceful fallback to default dark theme if localStorage is not available
+- CSS transitions provide smooth experience in supporting browsers
+
 ## File Structure Added
 ```
 ├── .flake8                    # Flake8 configuration
@@ -195,7 +327,25 @@ pytest backend/tests/test_api_endpoints.py::TestQueryEndpoint
 ├── run_quality_checks.py     # Advanced quality checker
 ├── backend/tests/conftest.py # Enhanced test fixtures
 ├── backend/tests/test_api_endpoints.py # Comprehensive API tests
+├── frontend/index.html       # Updated with theme toggle header
+├── frontend/style.css        # Enhanced with light theme and animations
+├── frontend/script.js        # Updated with theme management functions
 └── pyproject.toml            # Updated with tool configurations
 ```
 
-These changes establish a solid foundation for maintaining high code quality standards and ensuring API reliability throughout the development process.
+## Combined Benefits
+
+### Development Workflow
+1. **Code Quality**: Consistent formatting, linting, and type checking
+2. **Testing**: Comprehensive API test coverage with isolation
+3. **User Experience**: Professional theme switching capability
+4. **Maintainability**: Well-organized code and documentation
+5. **CI/CD Ready**: All tools provide proper exit codes for automation
+
+### Future Enhancements
+- Could integrate system theme preferences using `prefers-color-scheme`
+- Could add theme transition animations or haptic feedback
+- Could extend to support additional themes (high contrast, etc.)
+- Could add automated theme scheduling
+
+These changes establish a solid foundation for maintaining high code quality standards, ensuring API reliability, and providing an excellent user experience throughout the development process.
